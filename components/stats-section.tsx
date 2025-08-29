@@ -1,4 +1,4 @@
-import { Calendar, Users, TrendingUp, Building } from "lucide-react"
+import { Calendar, Users, Building } from "lucide-react"
 
 export function StatsSection() {
   const stats = [
@@ -15,12 +15,6 @@ export function StatsSection() {
       color: "text-yellow-600",
     },
     {
-      icon: TrendingUp,
-      value: "95%",
-      label: "Satisfaction Rate",
-      color: "text-green-600",
-    },
-    {
       icon: Building,
       value: "15",
       label: "Active Clubs",
@@ -31,7 +25,7 @@ export function StatsSection() {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-center">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div
