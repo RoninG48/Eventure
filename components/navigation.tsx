@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Calendar, Home, Search, User, Bell, LogOut, MapPin } from "lucide-react"
+import { Calendar, Home, Search, User, Bell, LogOut, MapPin, Image } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
 import {
@@ -24,7 +24,7 @@ export function Navigation() {
         return "/dashboard/organizer"
       default:
         return "/dashboard"
-    }
+    } 
   }
 
   return (
@@ -35,8 +35,7 @@ export function Navigation() {
             <Calendar className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">EventNest</h1>
-            <p className="text-sm text-gray-600">Christ University</p>
+            <h1 className="text-xl font-bold text-gray-900">Eventure</h1>
           </div>
         </Link>
 
@@ -47,12 +46,16 @@ export function Navigation() {
           </Link>
           <Link href="/browse" className="flex items-center gap-2 text-gray-700 hover:text-blue-600">
             <Search className="w-4 h-4" />
-            <span>Browse Events</span>
+            <span>Events</span>
           </Link>
           <Link href="/venues" className="flex items-center gap-2 text-gray-700 hover:text-blue-600">
             <MapPin className="w-4 h-4" />
             <span>Venues</span>
           </Link>
+            <Link href="/gallery" className="flex items-center gap-2 text-gray-700 hover:text-blue-600">
+            <Image className="w-4 h-4" />
+            <span>Gallery</span>
+            </Link>
           {user && (
             <Link href={getDashboardLink()} className="flex items-center gap-2 text-gray-700 hover:text-blue-600">
               <User className="w-4 h-4" />

@@ -1,15 +1,21 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, Users, TrendingUp, MapPin } from "lucide-react"
+import { CalendarCheck, Clock, Users, CheckCircle } from "lucide-react"
 
 export function OrganizerStats() {
   const stats = [
     {
-      icon: Calendar,
-      value: "12",
-      label: "Active Events",
+      icon: CalendarCheck,
+      value: "15",
+      label: "Total Events",
       color: "text-blue-600",
       bgColor: "bg-blue-100",
-      change: "+3 this month",
+    },
+    {
+      icon: Clock,
+      value: "3",
+      label: "Events Pending",
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
     },
     {
       icon: Users,
@@ -17,23 +23,13 @@ export function OrganizerStats() {
       label: "Total Registrations",
       color: "text-green-600",
       bgColor: "bg-green-100",
-      change: "+156 this week",
     },
     {
-      icon: TrendingUp,
-      value: "89%",
-      label: "Approval Rate",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
-      change: "+5% from last month",
-    },
-    {
-      icon: MapPin,
-      value: "8",
-      label: "Venues Booked",
+      icon: CheckCircle,
+      value: "12",
+      label: "Events Approved",
       color: "text-purple-600",
       bgColor: "bg-purple-100",
-      change: "2 pending approval",
     },
   ]
 
@@ -51,7 +47,6 @@ export function OrganizerStats() {
                 <p className="text-sm text-gray-600">{stat.label}</p>
               </div>
             </div>
-            <p className="text-xs text-gray-500">{stat.change}</p>
           </CardContent>
         </Card>
       ))}

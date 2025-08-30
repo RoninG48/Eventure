@@ -9,7 +9,6 @@ export function EventAnalytics() {
         { label: "Events Created", value: "8", change: "+2" },
         { label: "Total Registrations", value: "456", change: "+89" },
         { label: "Revenue Generated", value: "₹1,37,100", change: "+₹23,400" },
-        { label: "Approval Rate", value: "89%", change: "+5%" },
       ],
     },
   ]
