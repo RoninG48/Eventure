@@ -1,36 +1,42 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabaseClient"
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
+  const [userId, setUserId] = useState("") // regno/empid/adminid
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Mock authentication - in real app, this would call an API
-    setTimeout(() => {
-      login({
-        id: "1",
-        name: "John Doe",
-        email,
-        role: role as "student" | "organizer" | "admin",
+    try {
+      // We cannot directly compare bcrypt in JS; let Postgres do it
+      const { data, error } = await supabase.rpc("verify_user", {
+        p_user_id: userId,
+        p_password: password,
+        p_role: role,
       })
+
+      if (error || !data) {
+        setError("Invalid credentials")
+        setIsLoading(false)
+        return
+      }
 
       // Redirect based on role
       switch (role) {
@@ -46,8 +52,12 @@ export function LoginForm() {
         default:
           router.push("/dashboard")
       }
+    } catch (err) {
+      console.error(err)
+      setError("Something went wrong. Try again.")
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -55,15 +65,25 @@ export function LoginForm() {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">
-              Email Address
+            <Label htmlFor="userId" className="text-white">
+              {role === "student"
+                ? "Registration Number"
+                : role === "organizer"
+                ? "Employee ID"
+                : "Admin ID"}
             </Label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@christuniversity.in"
+              id="userId"
+              type="text"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder={
+                role === "student"
+                  ? "Enter Reg No"
+                  : role === "organizer"
+                  ? "Enter Emp ID"
+                  : "Enter Admin ID"
+              }
               className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
               required
             />
@@ -99,6 +119,8 @@ export function LoginForm() {
               </SelectContent>
             </Select>
           </div>
+
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <Button
             type="submit"
