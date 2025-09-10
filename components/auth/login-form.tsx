@@ -8,16 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabaseClient"
+import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/hooks/use-auth"
 
 export function LoginForm() {
-  const [userId, setUserId] = useState("") // regno/empid/adminid
+  const [credential, setCredential] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const router = useRouter()
+  const { login } = useAuth() // Use auth context login method
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,36 +26,70 @@ export function LoginForm() {
     setError(null)
 
     try {
-      // We cannot directly compare bcrypt in JS; let Postgres do it
-      const { data, error } = await supabase.rpc("verify_user", {
-        p_user_id: userId,
+      if (!credential || !password || !role) {
+        throw new Error("Please fill in all fields")
+      }
+
+      const supabase = createClient()
+
+      const { data: userData, error: userError } = await supabase.rpc("verify_user", {
+        p_usernumber: credential,
+        p_user_type: role,
         p_password: password,
-        p_role: role,
       })
 
-      if (error || !data) {
-        setError("Invalid credentials")
-        setIsLoading(false)
-        return
+      if (userError || !userData || userData.length === 0) {
+        throw new Error("Invalid credentials")
       }
 
-      // Redirect based on role
-      switch (role) {
-        case "student":
-          router.push("/dashboard")
-          break
-        case "organizer":
-          router.push("/dashboard/organizer")
-          break
-        case "admin":
-          router.push("/dashboard/admin")
-          break
-        default:
-          router.push("/dashboard")
+      const user = userData[0]
+
+      // Get additional user profile data based on role
+      let profileData = null
+      if (role === "student") {
+        const { data: studentData } = await supabase
+          .from("students")
+          .select("name, department, year, semester, course, events_registered_count")
+          .eq("user_id", user.id)
+          .single()
+        profileData = studentData
+      } else if (role === "organizer") {
+        const { data: organizerData } = await supabase
+          .from("organizers")
+          .select("name, department, events_created_count")
+          .eq("user_id", user.id)
+          .single()
+        profileData = organizerData
       }
-    } catch (err) {
-      console.error(err)
-      setError("Something went wrong. Try again.")
+
+      const authenticatedUser = {
+        id: user.id,
+        usernumber: user.usernumber,
+        role: user.user_type as "student" | "organizer" | "admin",
+      }
+
+      console.log("[v0] Login successful for user:", authenticatedUser.usernumber, authenticatedUser.role)
+
+      login(authenticatedUser, profileData)
+
+      setTimeout(() => {
+        switch (role) {
+          case "student":
+            router.push("/dashboard/student")
+            break
+          case "organizer":
+            router.push("/dashboard/organizer")
+            break
+          case "admin":
+            router.push("/dashboard/admin")
+            break
+          default:
+            router.push("/dashboard")
+        }
+      }, 100)
+    } catch (error: any) {
+      console.log("[v0] Login error:", error)
+      setError(error.message || "Authentication failed")
     } finally {
       setIsLoading(false)
     }
@@ -65,24 +100,44 @@ export function LoginForm() {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="userId" className="text-white">
+            <Label htmlFor="role" className="text-white">
+              Role
+            </Label>
+            <Select value={role} onValueChange={setRole} required>
+              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="organizer">Event Organizer</SelectItem>
+                <SelectItem value="admin">Administrator</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="credential" className="text-white">
               {role === "student"
                 ? "Registration Number"
                 : role === "organizer"
-                ? "Employee ID"
-                : "Admin ID"}
+                  ? "Employee ID"
+                  : role === "admin"
+                    ? "Username"
+                    : "Credential"}
             </Label>
             <Input
-              id="userId"
+              id="credential"
               type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+              value={credential}
+              onChange={(e) => setCredential(e.target.value)}
               placeholder={
                 role === "student"
-                  ? "Enter Reg No"
+                  ? "Enter 7-digit registration number"
                   : role === "organizer"
-                  ? "Enter Emp ID"
-                  : "Enter Admin ID"
+                    ? "Enter 7-digit employee ID"
+                    : role === "admin"
+                      ? "Enter username"
+                      : "Enter credential"
               }
               className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
               required
@@ -104,23 +159,7 @@ export function LoginForm() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role" className="text-white">
-              Role
-            </Label>
-            <Select value={role} onValueChange={setRole} required>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                <SelectValue placeholder="Select your role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="student">Student</SelectItem>
-                <SelectItem value="organizer">Event Organizer</SelectItem>
-                <SelectItem value="admin">Administrator</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <div className="text-red-300 text-sm bg-red-500/10 p-2 rounded">{error}</div>}
 
           <Button
             type="submit"
@@ -132,9 +171,7 @@ export function LoginForm() {
         </form>
 
         <div className="mt-4 text-center">
-          <a href="#" className="text-sm text-blue-200 hover:text-white">
-            Forgot your password?
-          </a>
+          <p className="text-sm text-blue-200">Use your university credentials to access the system</p>
         </div>
       </CardContent>
     </Card>

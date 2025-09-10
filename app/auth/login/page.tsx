@@ -17,18 +17,13 @@ export default function LoginPage() {
             </div>
           </Link>
           <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-          <p className="text-blue-200">Sign in to your account to continue</p>
+          <p className="text-blue-200">Sign in with your university credentials</p>
         </div>
 
         <LoginForm />
 
         <div className="text-center mt-6">
-          <p className="text-blue-200 text-sm">
-            Don't have an account?{" "}
-            <Link href="/auth/signup" className="text-yellow-400 hover:text-yellow-300 font-medium">
-              Sign up here
-            </Link>
-          </p>
+          <p className="text-blue-200 text-sm">Contact IT support if you need help with your credentials</p>
         </div>
       </div>
     </div>

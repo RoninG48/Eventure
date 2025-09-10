@@ -4,6 +4,7 @@ import { StudentStats } from "@/components/dashboard/student-stats"
 import { RegisteredEvents } from "@/components/dashboard/registered-events"
 import { UpcomingSchedule } from "@/components/dashboard/upcoming-schedule"
 import { ApplicationStatus } from "@/components/dashboard/application-status"
+import { EventCalendar } from "@/components/dashboard/event-calendar"
 
 export default function StudentDashboard() {
   return (
@@ -15,6 +16,7 @@ export default function StudentDashboard() {
           <div className="lg:col-span-2 space-y-8">
             <StudentStats />
             <RegisteredEvents />
+            <EventCalendar userRole="student" showUserEventsOnly={true} />
           </div>
           <div className="space-y-8">
             <UpcomingSchedule />
